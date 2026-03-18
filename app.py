@@ -116,7 +116,7 @@ with st.sidebar:
     st.markdown("### 🔧 API 설정")
     provider = st.selectbox("LLM 제공자", ["Anthropic", "OpenAI"], index=0)
     if provider == "OpenAI":
-        model = st.selectbox("모델", ["gpt-5.4-nano-2026-03-17", "gpt-5-mini-2025-08-07", "gpt-5-2025-08-07"], index=0)
+        model = st.selectbox("모델", ["gpt-5.4-nano-2026-03-17", "gpt-5-mini-2025-08-07", "gpt-5-2025-08-07", "gpt-4o"], index=0)
     else:
         model = st.selectbox("모델", ["claude-haiku-4-5", "claude-sonnet-4-6"], index=0)
     st.divider()

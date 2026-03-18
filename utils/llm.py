@@ -24,7 +24,8 @@ def call_openai(system_prompt: str, user_prompt: str, api_key: str,
     if is_legacy:
         params["temperature"] = 0.3
     response = client.chat.completions.create(**params)
-    return response.choices[0].message.content.strip()
+    content = response.choices[0].message.content
+    return content.strip() if content else "⚠️ 모델이 빈 응답을 반환했습니다. 다시 시도해 주세요."
 
 
 def call_claude(system_prompt: str, user_prompt: str, api_key: str,

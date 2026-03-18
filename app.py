@@ -250,26 +250,29 @@ with tab1:
                 st.session_state["explorer_result"] = call_selected(
                     EXPLORER_SYSTEM, EXPLORER_USER.format(expression=expr_input))
         else:
-            with st.spinner(f"{provider} / {model} — 심화 분석 중..."):
-                st.session_state["explorer_result"] = call_selected(
+            with st.spinner(f"{provider} / {model} — 기본 분석 중... (1/2)"):
+                basic = call_selected(
                     EXPLORER_SYSTEM, EXPLORER_USER.format(expression=expr_input))
-                st.session_state["explorer_result_deep"] = call_selected(
+            with st.spinner(f"{provider} / {model} — 심화 분석 중... (2/2)"):
+                deep = call_selected(
                     EXPLORER_SYSTEM, EXPLORER_DEEP_USER.format(expression=expr_input))
+            st.session_state["explorer_result"] = basic
+            st.session_state["explorer_result_deep"] = deep
 
     # 결과 표시
     saved_expr = st.session_state.get("explorer_expr")
     saved_view = st.session_state.get("explorer_view_mode")
 
     if saved_expr:
-        if saved_view == "📋 기본 분석" and st.session_state.get("explorer_result"):
+        if saved_view == "📋 기본 분석" and st.session_state["explorer_result"] is not None:
             st.markdown(st.session_state["explorer_result"])
-        elif saved_view == "🔬 심화 분석" and st.session_state.get("explorer_result"):
+        elif saved_view == "🔬 심화 분석" and st.session_state["explorer_result"] is not None:
             st.markdown("#### 📋 기본 분석")
-            st.markdown(st.session_state["explorer_result"])
-            if st.session_state.get("explorer_result_deep"):
+            st.markdown(st.session_state["explorer_result"] or "_결과 없음 — 다시 시도해 주세요._")
+            if st.session_state["explorer_result_deep"] is not None:
                 st.divider()
                 st.markdown("#### 🔬 심화 분석")
-                st.markdown(st.session_state["explorer_result_deep"])
+                st.markdown(st.session_state["explorer_result_deep"] or "_결과 없음 — 다시 시도해 주세요._")
 
         # 용례 판단 연습
         st.divider()

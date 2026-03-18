@@ -9,6 +9,9 @@ import anthropic
 def call_openai(system_prompt: str, user_prompt: str, api_key: str,
                 model: str = "gpt-5-mini-2025-08-07") -> str:
     client = OpenAI(api_key=api_key)
+    # 구형 모델: max_tokens / 신형 모델(gpt-4o 이후): max_completion_tokens
+    _legacy_models = {"gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"}
+    token_param = "max_tokens" if any(m in model for m in _legacy_models) else "max_completion_tokens"
     response = client.chat.completions.create(
         model=model,
         messages=[
@@ -16,7 +19,7 @@ def call_openai(system_prompt: str, user_prompt: str, api_key: str,
             {"role": "user", "content": user_prompt},
         ],
         temperature=0.3,
-        max_tokens=4096,
+        **{token_param: 4096},
     )
     return response.choices[0].message.content.strip()
 

@@ -113,10 +113,12 @@ with st.sidebar:
                                       placeholder="sk-ant-api03-...")
     st.divider()
 
-    st.markdown("### 🤖 모델 설정")
-    st.caption("기본: Claude(구조화) + GPT(심화)")
-    gpt_model = st.selectbox("GPT 모델", ["gpt-5-mini-2025-08-07", "gpt-5.4-nano-2026-03-17"], index=0)
-    claude_model = st.selectbox("Claude 모델", ["claude-haiku-4-5", "claude-sonnet-4-6"], index=0)
+    st.markdown("### 🔧 API 설정")
+    provider = st.selectbox("LLM 제공자", ["Anthropic", "OpenAI"], index=0)
+    if provider == "OpenAI":
+        model = st.selectbox("모델", ["gpt-5.4-nano-2026-03-17", "gpt-5-mini-2025-08-07"], index=0)
+    else:
+        model = st.selectbox("모델", ["claude-haiku-4-5", "claude-sonnet-4-6"], index=0)
     st.divider()
     st.markdown(
         "<div style='text-align:center; color:#aaa; font-size:0.8rem;'>"
@@ -138,15 +140,16 @@ st.markdown(
 # ─────────────────────────────────────────────
 # LLM 호출 헬퍼
 # ─────────────────────────────────────────────
-def call_gpt(system: str, user: str) -> str:
-    if not openai_key:
-        return "⚠️ OpenAI API 키를 입력해 주세요."
-    return call_llm(system, user, "OpenAI", openai_key, gpt_model)
-
-def call_claude_fn(system: str, user: str) -> str:
-    if not anthropic_key:
-        return "⚠️ Anthropic API 키를 입력해 주세요."
-    return call_llm(system, user, "Anthropic", anthropic_key, claude_model)
+def call_selected(system: str, user: str) -> str:
+    """선택된 LLM 제공자/모델로 통합 호출"""
+    if provider == "OpenAI":
+        if not openai_key:
+            return "⚠️ OpenAI API 키를 입력해 주세요."
+        return call_llm(system, user, "OpenAI", openai_key, model)
+    else:
+        if not anthropic_key:
+            return "⚠️ Anthropic API 키를 입력해 주세요."
+        return call_llm(system, user, "Anthropic", anthropic_key, model)
 
 # ─────────────────────────────────────────────
 # 공통: 학생 함정 분석 (교사 모드 전용)
@@ -159,7 +162,7 @@ TRAP_SYSTEM = (
 )
 
 def generate_trap_analysis(expression: str) -> str:
-    return call_claude_fn(
+    return call_selected(
         TRAP_SYSTEM,
         f"다음 중국어 비유 표현에 대해 **학생들이 틀리기 쉬운 함정**을 분석하고 보충 교안을 작성하세요.\n\n"
         f"**표현**: {expression}\n\n"
@@ -180,7 +183,7 @@ def show_trap_section(expression: str, state_key: str):
     trap_btn = st.button("⚠️ 함정 분석 생성", key=f"trap_btn_{state_key}")
 
     if trap_btn and expression:
-        with st.spinner("학생 함정 분석 중 (Claude)..."):
+        with st.spinner(f"학생 함정 분석 중 ({provider} / {model})..."):
             st.session_state[state_key] = generate_trap_analysis(expression)
 
     if st.session_state.get(state_key):
@@ -219,7 +222,7 @@ with tab1:
 
     view_mode = st.radio(
         "보기 모드",
-        ["📋 기본 (Claude)", "🔬 심화 (GPT)", "⚔️ 나란히 비교"],
+        ["📋 기본 분석", "🔬 심화 분석"],
         horizontal=True,
         key="explorer_view",
     )
@@ -230,47 +233,31 @@ with tab1:
         st.session_state["ctx_result"] = None
         st.session_state["trap_explorer"] = None
 
-        if view_mode == "📋 기본 (Claude)":
-            with st.spinner("Claude가 분석 중..."):
-                st.session_state["explorer_result"] = call_claude_fn(
+        if view_mode == "📋 기본 분석":
+            with st.spinner(f"{provider} / {model} — 분석 중..."):
+                st.session_state["explorer_result"] = call_selected(
                     EXPLORER_SYSTEM, EXPLORER_USER.format(expression=expr_input))
-        elif view_mode == "🔬 심화 (GPT)":
-            with st.spinner("GPT가 심화 분석 중..."):
-                st.session_state["explorer_result"] = call_gpt(
-                    EXPLORER_SYSTEM, EXPLORER_USER.format(expression=expr_input))
-                st.session_state["explorer_result_deep"] = call_gpt(
-                    EXPLORER_SYSTEM, EXPLORER_DEEP_USER.format(expression=expr_input))
         else:
-            with st.spinner("Claude & GPT 분석 중..."):
-                st.session_state["explorer_result_c"] = call_claude_fn(
+            with st.spinner(f"{provider} / {model} — 심화 분석 중..."):
+                st.session_state["explorer_result"] = call_selected(
                     EXPLORER_SYSTEM, EXPLORER_USER.format(expression=expr_input))
-                st.session_state["explorer_result_g"] = call_gpt(
-                    EXPLORER_SYSTEM, EXPLORER_USER.format(expression=expr_input))
+                st.session_state["explorer_result_deep"] = call_selected(
+                    EXPLORER_SYSTEM, EXPLORER_DEEP_USER.format(expression=expr_input))
 
     # 결과 표시
     saved_expr = st.session_state.get("explorer_expr")
     saved_view = st.session_state.get("explorer_view_mode")
 
     if saved_expr:
-        if saved_view == "📋 기본 (Claude)" and st.session_state.get("explorer_result"):
+        if saved_view == "📋 기본 분석" and st.session_state.get("explorer_result"):
             st.markdown(st.session_state["explorer_result"])
-        elif saved_view == "🔬 심화 (GPT)" and st.session_state.get("explorer_result"):
+        elif saved_view == "🔬 심화 분석" and st.session_state.get("explorer_result"):
             st.markdown("#### 📋 기본 분석")
             st.markdown(st.session_state["explorer_result"])
             if st.session_state.get("explorer_result_deep"):
                 st.divider()
                 st.markdown("#### 🔬 심화 분석")
                 st.markdown(st.session_state["explorer_result_deep"])
-        elif saved_view == "⚔️ 나란히 비교":
-            col_c, col_g = st.columns(2)
-            with col_c:
-                st.markdown('<span class="model-badge-claude">Claude</span>', unsafe_allow_html=True)
-                if st.session_state.get("explorer_result_c"):
-                    st.markdown(st.session_state["explorer_result_c"])
-            with col_g:
-                st.markdown('<span class="model-badge-gpt">GPT</span>', unsafe_allow_html=True)
-                if st.session_state.get("explorer_result_g"):
-                    st.markdown(st.session_state["explorer_result_g"])
 
         # 용례 판단 연습
         st.divider()
@@ -283,8 +270,8 @@ with tab1:
             )
             if st.button("📊 용례 분석", key="ctx_btn"):
                 if ctx_sentence:
-                    with st.spinner("용례 분석 중..."):
-                        st.session_state["ctx_result"] = call_claude_fn(
+                    with st.spinner(f"용례 분석 중 ({provider} / {model})..."):
+                        st.session_state["ctx_result"] = call_selected(
                             CONTEXTUAL_CHECK_SYSTEM,
                             CONTEXTUAL_CHECK_USER.format(expression=saved_expr, sentence=ctx_sentence))
             if st.session_state.get("ctx_result"):
@@ -293,14 +280,11 @@ with tab1:
         # 다운로드 (두 모드 모두)
         st.divider()
         download_text = f"# LexiChinese — {saved_expr}\n\n"
-        if saved_view == "📋 기본 (Claude)":
+        if saved_view == "📋 기본 분석":
             download_text += st.session_state.get("explorer_result", "")
-        elif saved_view == "🔬 심화 (GPT)":
+        else:
             download_text += f"## 기본 분석\n{st.session_state.get('explorer_result', '')}\n\n"
             download_text += f"## 심화 분석\n{st.session_state.get('explorer_result_deep', '')}"
-        else:
-            download_text += f"## Claude 분석\n{st.session_state.get('explorer_result_c', '')}\n\n"
-            download_text += f"## GPT 분석\n{st.session_state.get('explorer_result_g', '')}"
 
         st.download_button(
             "📥 분석 결과 다운로드 (.md)",
@@ -333,18 +317,18 @@ with tab2:
             st.session_state["example_expr"] = expr_example
             st.session_state["example_hsk"] = hsk_level
             st.session_state["trap_example"] = None
-            with st.spinner(f"HSK {hsk_level}급 수준 예문 생성 중 (GPT)..."):
-                st.session_state["example_result"] = call_gpt(
+            with st.spinner(f"HSK {hsk_level}급 수준 예문 생성 중 ({provider} / {model})..."):
+                st.session_state["example_result"] = call_selected(
                     EXAMPLE_SYSTEM,
                     EXAMPLE_USER.format(expression=expr_example, hsk_level=hsk_level))
 
     if st.session_state.get("example_result"):
         st.markdown(st.session_state["example_result"])
         st.markdown(
-            '<div class="korean-bridge">'
-            '🇰🇷 <strong>한국어 대응 연결 (Korean Bridge)</strong><br>'
-            '위 예문에 포함된 한국어 대응 표현은 GPT가 자동 생성한 것입니다.'
-            '</div>',
+            f'<div class="korean-bridge">'
+            f'🇰🇷 <strong>한국어 대응 연결 (Korean Bridge)</strong><br>'
+            f'위 예문에 포함된 한국어 대응 표현은 {provider} ({model})이 자동 생성한 것입니다.'
+            f'</div>',
             unsafe_allow_html=True,
         )
 
@@ -391,8 +375,8 @@ with tab3:
             else:
                 prompt = QUIZ_KOREAN_USER.format(expression=expr_quiz)
             st.session_state["quiz_show_answer"] = False
-            with st.spinner("퀴즈 생성 중..."):
-                st.session_state["quiz_result"] = call_gpt(QUIZ_SYSTEM, prompt)
+            with st.spinner(f"퀴즈 생성 중 ({provider} / {model})..."):
+                st.session_state["quiz_result"] = call_selected(QUIZ_SYSTEM, prompt)
 
     if st.session_state.get("quiz_result"):
         raw = st.session_state["quiz_result"]

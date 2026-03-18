@@ -93,8 +93,24 @@ with st.sidebar:
 
     st.divider()
     st.markdown("### 🔑 API 키")
-    openai_key = st.text_input("OpenAI API Key", value=_get_secret("OPENAI_API_KEY"), type="password")
-    anthropic_key = st.text_input("Anthropic API Key", value=_get_secret("ANTHROPIC_API_KEY"), type="password")
+
+    # 시크릿/환경변수에서 키를 불러와 UI에 노출하지 않음 (보안)
+    _openai_secret  = _get_secret("OPENAI_API_KEY")
+    _anthropic_secret = _get_secret("ANTHROPIC_API_KEY")
+
+    if _openai_secret:
+        st.success("✅ OpenAI API Key 설정됨")
+        openai_key = _openai_secret
+    else:
+        openai_key = st.text_input("OpenAI API Key", type="password",
+                                   placeholder="sk-proj-...")
+
+    if _anthropic_secret:
+        st.success("✅ Anthropic API Key 설정됨")
+        anthropic_key = _anthropic_secret
+    else:
+        anthropic_key = st.text_input("Anthropic API Key", type="password",
+                                      placeholder="sk-ant-api03-...")
     st.divider()
 
     st.markdown("### 🤖 모델 설정")

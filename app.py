@@ -122,7 +122,7 @@ with st.sidebar:
     st.divider()
     st.markdown(
         "<div style='text-align:center; color:#aaa; font-size:0.8rem;'>"
-        "LexiChinese v1.2<br>덕성여자대학교 중어중문학전공<br>박민준 교수</div>",
+        "LexiChinese v1.2</div>",
         unsafe_allow_html=True,
     )
 

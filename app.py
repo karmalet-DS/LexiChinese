@@ -115,8 +115,8 @@ with st.sidebar:
 
     st.markdown("### 🤖 모델 설정")
     st.caption("기본: Claude(구조화) + GPT(심화)")
-    gpt_model = st.selectbox("GPT 모델", ["gpt-4o", "gpt-4o-mini", "gpt-4.1", "gpt-4.1-mini"], index=0)
-    claude_model = st.selectbox("Claude 모델", ["claude-4-sonnet-20250514", "claude-3-haiku-20240307"], index=0)
+    gpt_model = st.selectbox("GPT 모델", ["gpt-5-mini-2025-08-07", "gpt-5.4-nano-2026-03-17"], index=0)
+    claude_model = st.selectbox("Claude 모델", ["claude-haiku-4-5", "claude-sonnet-4-6"], index=0)
     st.divider()
     st.markdown(
         "<div style='text-align:center; color:#aaa; font-size:0.8rem;'>"

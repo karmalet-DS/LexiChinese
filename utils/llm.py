@@ -7,7 +7,7 @@ import anthropic
 
 
 def call_openai(system_prompt: str, user_prompt: str, api_key: str,
-                model: str = "gpt-4o") -> str:
+                model: str = "gpt-5-mini-2025-08-07") -> str:
     client = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
         model=model,
@@ -22,7 +22,7 @@ def call_openai(system_prompt: str, user_prompt: str, api_key: str,
 
 
 def call_claude(system_prompt: str, user_prompt: str, api_key: str,
-                model: str = "claude-4-sonnet-20250514") -> str:
+                model: str = "claude-haiku-4-5") -> str:
     client = anthropic.Anthropic(api_key=api_key)
     message = client.messages.create(
         model=model,

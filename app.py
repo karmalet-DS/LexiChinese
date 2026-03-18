@@ -25,6 +25,14 @@ from utils.prompts import (
 
 load_dotenv()
 
+# ── Streamlit Cloud / 로컬 겸용 시크릿 로더 ──────────────
+def _get_secret(key: str) -> str:
+    """Streamlit Cloud(st.secrets) → 로컬 .env(os.getenv) 순서로 조회"""
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError):
+        return os.getenv(key, "")
+
 # ─────────────────────────────────────────────
 # 페이지 설정
 # ─────────────────────────────────────────────
@@ -85,8 +93,8 @@ with st.sidebar:
 
     st.divider()
     st.markdown("### 🔑 API 키")
-    openai_key = st.text_input("OpenAI API Key", value=os.getenv("OPENAI_API_KEY", ""), type="password")
-    anthropic_key = st.text_input("Anthropic API Key", value=os.getenv("ANTHROPIC_API_KEY", ""), type="password")
+    openai_key = st.text_input("OpenAI API Key", value=_get_secret("OPENAI_API_KEY"), type="password")
+    anthropic_key = st.text_input("Anthropic API Key", value=_get_secret("ANTHROPIC_API_KEY"), type="password")
     st.divider()
 
     st.markdown("### 🤖 모델 설정")

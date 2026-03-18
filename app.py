@@ -141,15 +141,27 @@ st.markdown(
 # LLM 호출 헬퍼
 # ─────────────────────────────────────────────
 def call_selected(system: str, user: str) -> str:
-    """선택된 LLM 제공자/모델로 통합 호출"""
-    if provider == "OpenAI":
-        if not openai_key:
-            return "⚠️ OpenAI API 키를 입력해 주세요."
-        return call_llm(system, user, "OpenAI", openai_key, model)
-    else:
-        if not anthropic_key:
-            return "⚠️ Anthropic API 키를 입력해 주세요."
-        return call_llm(system, user, "Anthropic", anthropic_key, model)
+    """선택된 LLM 제공자/모델로 통합 호출 (인증/API 오류 안전 처리 포함)"""
+    try:
+        if provider == "OpenAI":
+            if not openai_key:
+                return "⚠️ OpenAI API 키를 입력해 주세요."
+            return call_llm(system, user, "OpenAI", openai_key, model)
+        else:
+            if not anthropic_key:
+                return "⚠️ Anthropic API 키를 입력해 주세요."
+            return call_llm(system, user, "Anthropic", anthropic_key, model)
+    except Exception as e:
+        err = str(e)
+        if "authentication" in err.lower() or "401" in err or "invalid_api_key" in err.lower():
+            return (
+                f"🔑 **API 키 인증 실패** ({provider})\n\n"
+                f"Streamlit Cloud → Settings → Secrets 에서 "
+                f"`{'OPENAI_API_KEY' if provider == 'OpenAI' else 'ANTHROPIC_API_KEY'}` "
+                f"값을 확인해 주세요.\n\n"
+                f"> 상세 오류: `{err[:200]}`"
+            )
+        return f"❌ **LLM 호출 오류**: {err[:300]}"
 
 # ─────────────────────────────────────────────
 # 공통: 학생 함정 분석 (교사 모드 전용)

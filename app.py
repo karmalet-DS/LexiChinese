@@ -409,7 +409,6 @@ with tab3:
             # 교사 모드: 정답 바로 표시
             if answer_part:
                 st.divider()
-                st.markdown("### ✅ 정답 및 해설")
                 st.markdown(answer_part)
         else:
             # 학습자 모드: 버튼으로 정답 확인
@@ -418,7 +417,6 @@ with tab3:
                 if st.button("🔓 정답 확인", key="quiz_answer_btn"):
                     st.session_state["quiz_show_answer"] = True
                 if st.session_state.get("quiz_show_answer"):
-                    st.markdown("### ✅ 정답 및 해설")
                     st.markdown(answer_part)
 
         # 다운로드 (두 모드 모두, 전체 내용 포함)
